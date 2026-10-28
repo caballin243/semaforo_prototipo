@@ -8,7 +8,7 @@ const char* wifi_pasword = "12345678";
 WiFiClient clienteWifi;
 
 //-----MQTT Logica:-----
-const char* host = "192.168.137.1";
+const char* host = "192.168.1.86";
 const int puerto = 1883;
 const char* id_semaforo = "Semaforo_prototipo";
 PubSubClient clientemqtt(clienteWifi);
@@ -29,15 +29,32 @@ void reconectar_mqtt(){
   clientemqtt.subscribe(topic_semaforos);
 }
 
+/*
+void reconnectar_wifi() {
+  unsigned long tempo = millis();
+  Serial.print("Reconectando");
+  WiFi.begin(wifi_name,wifi_pasword);
+  while(WiFi.status() != WL_CONNECTED){
+
+    if ((millis()-1000)>=tempo){
+      tempo = millis();
+      Serial.println("...");
+    }
+      
+  }
+  Serial.println("");
+  Serial.println("Conexion lograda");
+}
+  */
 
 void reconnectar_wifi() {
-  Serial.print("Reconectando");
+  WiFi.begin(wifi_name,wifi_pasword);
   while(WiFi.status() != WL_CONNECTED){
-    WiFi.begin(wifi_name,wifi_pasword);
-    
-    delay(1000);
-    Serial.print(".");
-      
+    Serial.print("Reconectando");
+    delay(5000);
+      if(WiFi.status() != WL_CONNECTED){
+        Serial.print(".");
+      }
   }
   Serial.println("");
   Serial.println("Conexion lograda");
@@ -99,23 +116,24 @@ void setup(){
 }
 
 
+
 //-----loop:-----
 void loop(){
 
 //----------Reconectar wifi------------
   if (WiFi.status() != WL_CONNECTED){
+    
     reconnectar_wifi();
-  }
+  }else{
 //---------Reconectar broker-----------
   if (!clientemqtt.connected()){
     reconectar_mqtt();
   }
   clientemqtt.loop();
-
-
+  }
 //-----Estado de emergencia-----
   if(estado_emergencia){
-    estado_verde();//aqui le arbimos el paso por 35 segundos o hasta que llegue un mensaje de emergencia terminada(un "2")
+    estado_verde();//aqui le arbimos el paso por 25 segundos o hasta que llegue un mensaje de emergencia terminada(un "2")
     if(millis()-time_emergencia>=25000){
       estado_emergencia = false;
       estado_normal();
